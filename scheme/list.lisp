@@ -1,48 +1,98 @@
-; adicionar no início
-(define (add-first l x)
-    (if (list? l)
-        (cons x l)
+;;;;;;;;;;;;;;; add in the beginning ;;;;;;;;;;;;;;;
+(define (add-first ls element)
+    (if (list? ls)
+        (cons element ls)
         `type-error
     )
 )
 
-; adicionar no fim
-(define (add-last l x)
-    (if (list? l)
-        (if (null? l)
-            (cons x `())
-            (cons (car l) (add-last (cdr l) x))
-        )
-        `type-error
-    )
-)
-
-; adicionar em um indice especifico
-(define (add l i x)
-    (if (list? l)
-        (if (= i 0)
-            (cons x l)
-            (cons (car l) (add (cdr l) (- i 1) x))
-        )
-        `type-error
-    )
-)
-
-; adicionar em ordem
-(define (add-sorted l x)
-    (if (list? l)
-        (if (null? l)
-            (cons x `())
-            (if (<= x (car l))
-                (cons x l)
-                (cons (car l) (add-sorted (cdr l) x))
+;;;;;;;;;;;;;;; add at the end ;;;;;;;;;;;;;;;
+(define (snoc element ls)
+    (letrec
+        (
+            (snoc-rec
+                (lambda (e l)
+                    (if (null? l)
+                        (cons e `())
+                        (cons (car l) (snoc-rec e (cdr l)))
+                    )
+                )
             )
         )
-        `type-error
+        (if (list? ls)
+            (snoc-rec element ls)
+            `type-error
+        )
     )
 )
 
-; remover do inicio
+;caudal
+(define (add-last ls element)
+    (letrec
+        (
+            (add-rev-rec
+                (lambda (l e lo)
+                    (if (null? l)
+                        (cons e lo)
+                        (add-rev-rec (cdr l) e (cons (car l) lo))
+                    )
+                )
+            )
+        )
+        (if (list? ls)
+            (reverse (add-rev-rec ls element `()))
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; add in an index ;;;;;;;;;;;;;;;
+(define (add-position ls index element)
+    (letrec
+        (
+            (add-rec
+                (lambda (l i e)
+                    (if (= i 0)
+                        (cons e l)
+                        (if (null? l)
+                            `index-out-of-bounds
+                            (cons (car l) (add-rec (cdr l) (- i 1) e))
+                        )
+                    )
+                )
+            )
+        )
+        (if (and (list? ls) (integer? index))
+            (add-rec ls index element)
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; add in order ;;;;;;;;;;;;;;;
+(define (add-sorted ls element)
+    (letrec
+        (
+            (add-rec
+                (lambda (l e)
+                    (if (null? l)
+                        (cons e `())
+                        (if (< (car l) e)
+                            (cons (car l) (add-rec (cdr l) e))
+                            (cons e l)
+                        )
+                    )
+                )
+            )
+        )
+        (if (list? ls)
+            (add-rec ls element)
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; remove first element ;;;;;;;;;;;;;;;
 (define (remove-first l)
     (if (list? l)
         (if (null? l)
@@ -53,158 +103,235 @@
     )
 )
 
-; remover do fim
-(define (remove-last l)
-    (if (list? l)
-        (if (<= (length l) 1)
-            `()
-            (cons (car l) (remove-last (cdr l)))
-        )
-        `type-error
-    )
-)
-
-; remover de um indice
-(define (remove l i)
-    (if (and (list? l) (number? i))
-        (if (null? l)
-            `()
-            (if (= i 0)
-                (cdr l)
-                (cons (car l) (remove (cdr l) (- i 1)))
-            )
-        )
-        `type-error
-    )
-)
-
-; remover a primeira ocorrencia de x
-(define (remove-first l x)
-    (if (list? l)
-        (if (null? l)
-            `()
-            (if (= x (car l))
-                (cdr l)
-                (cons (car l) (remove-first (cdr l) x))
-            )
-        )
-        `type-error
-    )
-)
-
-; remover a ultima ocorrencia de x
-;(define (remove-last element listA)
-;    (letrec
-;        (
-;            (remove-last-aux 
-;                (lambda (e l)
-;                    ()
-;                )
-;            )
-;        )
-;    )
-;)
-
-; remover todas as ocorrencias de x
-
-; verificar se a lista possui x
-(define (contains l x)
-    (if (list? l)
-        (if (null? l)
-            #f
-            (if (= x (car l))
-                #t
-                (contains (cdr l) x)
-            )
-        )
-        `type-error
-    )
-)
-
-; acessar o elemento de indice i
-(define (at l i)
-    (if (list? l)
-        (if (null? l)
-            `does-not-exist
-            (if (= i 0)
-                (car l)
-                (at (cdr l) (- i 1))
-            )
-        )
-        `type-error
-    )
-)
-
-; primeira ocorrencia de determinado elemento
-(define (index-of l x)
-    (if (list? l)
-        (if (null? l)
-            #f
-            (if (equal? (car l) x)
-                0
-                (+ 1 (index-of (cdr l) x))
-            )
-        )
-        `type-error
-    )
-)
-
-; map
-(define (map l func)
-    (if (and (list? l) (procedure? func))
-        (if (null? l)
-            `()
-            (cons (func (car l)) (map (cdr l) func))
-        )
-        `type-error
-    )
-)
-
-; filter
-(define (filter l func)
-    (if (and (list? l) (procedure? func))
-        (if (null? l)
-            `()
-            (if (func (car l))
-                (cons (car l) (filter (cdr l) func))
-                (filter (cdr l) func)
-            )
-        )
-        `type-error
-    )
-)
-
-; soma de duas listas
-(define (sum l1 l2)
-    (if (and (list? l1) (list? l2))
-        (if (equal? (length l1) (length l2))
-            (if (null? l1) ; both are null, because they have the same size
-                `()
-                (cons (+ (car l1) (car l2)) (sum (cdr l1) (cdr l2)))
-            )
-            `different-size-error
-        )
-        `type-error
-    )
-)
-
-; produto vetorial
-(define (prod-vec l1 l2)
-    (letrec 
+;;;;;;;;;;;;;;; remove last element ;;;;;;;;;;;;;;;
+(define (remove-last ls)
+    (letrec
         (
-            (prod-vec-aux
-                (lambda (lista1 lista2)
-                    (if (null? lista1) ; entao lista2 tbm eh vazio
-                        0
-                        (+ (* (car lista1) (car lista2)) (prod-vec-aux (cdr lista1) (cdr lista2)))
+            (remove-rec
+                (lambda (l)
+                    (if (or (null? l) (= (length l) 1))
+                        `()
+                        (cons (car l) (remove-rec (cdr l)))
                     )
                 )
             )
         )
+        (if (list? ls)
+            (remove-rec ls)
+            `type-error
+        )
+    )
+)
 
-        (if (and (list? l1) (list? l2))
-            (if (equal? (length l1) (length l2))
-                (prod-vec-aux l1 l2)
+;;;;;;;;;;;;;;; remove element from index ;;;;;;;;;;;;;;;
+(define (remove-position ls index)
+    (letrec
+        (
+            (remove-rec
+                (lambda (l i)
+                    (if (null? l)
+                        `()
+                        (if (= i 0)
+                            (cdr l)
+                            (cons (car l) (remove-rec (cdr l) (- i 1)))
+                        )
+                    )
+                )
+            )
+        )
+        (if (and (list? ls) (integer? index))
+            (remove-rec ls index)
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; remove first ocurrence of element ;;;;;;;;;;;;;;;
+(define (remove-first ls element)
+    (letrec
+        (
+            (remove-rec
+                (lambda (l e)
+                    (if (null? l)
+                        `()
+                        (if (= (car l) e)
+                            (cdr l)
+                            (cons (car l) (remove-rec (cdr l) e))
+                        )
+                    )
+                )
+            )
+        )
+        (if (list? ls)
+            (remove-rec ls element)
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; remove last ocurrence of element ;;;;;;;;;;;;;;;
+; think about a better solution
+(define (remove-last ls element)
+    (if (list? ls)
+        (reverse (remove-first (reverse ls) element))
+        `type-error
+    )
+)
+
+;;;;;;;;;;;;;;; remove all ocurrences of element ;;;;;;;;;;;;;;;
+(define (removeall ls element)
+    (letrec
+        (
+            (removeall-rec
+                (lambda (l e)
+                    (if (null? l)
+                        `()
+                        (if (= (car l) e)
+                            (removeall-rec (cdr l) e)
+                            (cons (car l) (removeall-rec (cdr l) e))
+                        )
+                    )
+                )
+            )
+        )
+        (if (list? ls)
+            (removeall-rec ls element)
+            `type-error
+        )
+    )
+)
+
+; caudal
+(define (removeall ls element)
+    (letrec
+        (
+            (removeall-rev-rec
+                (lambda (l e lo)
+                    (if (null? l)
+                        lo
+                        (if (= e (car l))
+                            (removeall-rev-rec (cdr l) e lo)
+                            (removeall-rev-rec (cdr l) e (cons (car l) lo))
+                        )
+                    )
+                )
+            )
+        )
+        (if (list? ls)
+            (reverse (removeall-rev-rec ls element `()))
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; check if list contains element ;;;;;;;;;;;;;;;
+(define (contains ls element)
+    (letrec
+        (
+            (contains-rec
+                (lambda (l e)
+                    (if (null? l)
+                        #f
+                        (if (= e (car l))
+                            #t
+                            (contains-rec (cdr l) e)
+                        )
+                    )
+                )
+            )
+        )
+        (if (list? ls)
+            (contains-rec ls element)
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; get element by index ;;;;;;;;;;;;;;;
+(define (at ls index)
+    (letrec
+        (
+            (at-rec
+                (lambda (l i)
+                    (if (null? l)
+                        #f
+                        (if (= i 0)
+                            (car l)
+                            (at-rec (cdr l) (- i 1))
+                        )
+                    )
+                )
+            )
+        )
+        (if (and (list? ls) (integer? index))
+            (at-rec ls index)
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; first ocurrence of element ;;;;;;;;;;;;;;;
+(define (index-of ls element)
+    (letrec
+        (
+            (index-of-rec
+                (lambda (l e)
+                    (if (null? l)
+                        -1
+                        (if (= e (car l))
+                            0
+                            (+ 1 (index-of-rec (cdr l) e))
+                        )
+                    )
+                )
+            )
+        )
+        (if (list? ls)
+            (index-of-rec ls element)
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; sum lists ;;;;;;;;;;;;;;;
+(define (sum ls1 ls2)
+    (letrec
+        (
+            (sum-rec
+                (lambda (l1 l2)
+                    (if (null? l1)
+                        l2
+                        (cons (+ (car l1) (car l2)) (sum-rec (cdr l1) (cdr l2)))
+                    )
+                )
+            )
+        )
+        (if (and (list? ls1) (list? ls2))
+            (if (= (length ls1) (length ls2))
+                (sum-rec ls1 ls2)
+                `error
+            )
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; cross product ;;;;;;;;;;;;;;;
+(define (cross-product ls1 ls2)
+    (letrec
+        (
+            (cross-product-rec
+                (lambda (l1 l2)
+                    (if (null? l1)
+                        0
+                        (+ (* (car l1) (car l2)) (cross-product-rec (cdr l1) (cdr l2)))
+                    )
+                )
+            )
+        )
+        (if (and (list? ls1) (list? ls2))
+            (if (= (length ls1) (length ls2))
+                (cross-product-rec ls1 ls2)
                 `different-size-error
             )
             `type-error
@@ -212,97 +339,221 @@
     )
 )
 
-; inverter a lista
-(define (reverse ls)
+;caudal
+(define (cross-product ls1 ls2)
     (letrec
         (
-            (reverse-aux
-                (lambda (li, lo)
-                    (if (null? li)
-                        lo
-                        (reverse-aux (cdr li) (cons (car li) lo))
+            (cross-product-rec
+                (lambda (l1 l2 acc)
+                    (if (null? l1)
+                        acc
+                        (cross-product-rec (cdr l1) (cdr l2)
+                            (+ (* (car l1) (car l2)) acc)
+                        )
+                    )
+                )
+            )
+        )
+        (if (and (list? ls1) (list? ls2))
+            (if (= (length ls1) (length ls2))
+                (cross-product-rec ls1 ls2 0)
+                `different-size-error
+            )
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; reverse ;;;;;;;;;;;;;;;
+(define (rev ls)
+    (letrec
+        (
+            (rev-rec
+                (lambda (l)
+                    (if (null? l)
+                        `()
+                        (snoc (car l) (rev-rec (cdr l)))
                     )
                 )
             )
         )
         (if (list? ls)
-            (reverse-aux ls `())
+            (rev-rec ls)
             `type-error
         )
     )
 )
 
-; concatenar
+;caudal
+(define (rev ls)
+    (letrec
+        (
+            (rev-rec
+                (lambda (l lo)
+                    (if (null? l)
+                        lo
+                        (rev-rec (cdr l) (cons (car l) lo))
+                    )
+                )
+            )
+        )
+        (if (list? ls)
+            (rev-rec ls `())
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; length ;;;;;;;;;;;;;;;
+(define (size ls)
+    (letrec
+        (
+            (size-rec
+                (lambda (l)
+                    (if (null? l)
+                        0
+                        (+ 1 (size-rec (cdr l)))
+                    )
+                )
+            )
+        )
+        (if (list? ls)
+            (size-rec ls)
+            `type-error
+        )
+    )
+)
+
+;caudal
+(define (size ls)
+    (letrec
+        (
+            (size-rec
+                (lambda (l acc)
+                    (if (null? l)
+                        acc
+                        (size-rec (cdr l) (+ 1 acc))
+                    )
+                )
+            )
+        )
+        (if (list? ls)
+            (size-rec ls 0)
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; concat ;;;;;;;;;;;;;;;
 (define (concat ls1 ls2)
     (letrec
         (
-            (concat-aux
+            (concat-rec
                 (lambda (l1 l2)
                     (if (null? l1)
                         l2
-                        (cons (car l1) (concat-aux (cdr l1) l2))
+                        (cons (car l1) (concat-rec (cdr l1) l2))
                     )
                 )
             )
         )
         (if (and (list? ls1) (list? ls2))
-            (concat-aux ls1 ls2)
+            (concat-rec ls1 ls2)
             `type-error
         )
     )
 )
 
-;;; intercalar
-(define (intercalate ls1 ls2)
+;caudal
+(define (concat ls1 ls2)
     (letrec
         (
-            (intercalar-aux
-                (lambda (l1 l2)
-                    (if (null? l1)
-                        l2
-                        (cons (car l1) (cons (car l2) (intercalar-aux (cdr l1) (cdr l2))))
-                    )
-                )
-            )
-        )
-        (if (and (list? ls1) (list? ls2))
-            (intercalar-aux ls1 ls2)
-            `type-error
-        )
-    )
-)
-
-(define (intercalate ls1 ls2)
-    (letrec
-        (
-            (intercalar-aux
+            (concat-rec
                 (lambda (l1 l2 lo)
-                    (if (null? l1)
-                        (if (null? l2)
-                            lo
-                            (intercalar-aux l1 (cdr l2) (cons (car l2) lo))
-                        )
-                        (if (null? l2)
-                            (intercalar-aux (cdr l1) l2 (cons (car l1) lo))
-                            (intercalar-aux (cdr l1) (cdr l2) (cons (car l2) (cons (car l1) lo)))
+                    (if (and (null? l1) (null? l2))
+                        lo
+                        (if (null? l1)
+                            (concat-rec `() (cdr l2) (cons (car l2) lo))
+                            (concat-rec (cdr l1) l2 (cons (car l1) lo))
                         )
                     )
                 )
             )
         )
         (if (and (list? ls1) (list? ls2))
-            (reverse (intercalar-aux ls1 ls2 `()))
+            (reverse
+                (concat-rec ls1 ls2 `())
+            )
             `type-error
         )
     )
 )
 
-;;; flatten
-; `(1 2 (3 4 (5 6)) 7)
+;;;;;;;;;;;;;;; intercalate ;;;;;;;;;;;;;;;
+(define (intercalate ls1 ls2)
+    (letrec
+        (
+            (intercalate-rec
+                (lambda (l1 l2)
+                    (if (null? l1)
+                        l2
+                        (if (null? l2)
+                            l1
+                            (cons (car l1)
+                                (cons (car l2)
+                                    (intercalate-rec (cdr l1) (cdr l2))
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+        (if (and (list? ls1) (list? ls2))
+            (intercalate-rec ls1 ls2)
+            `type-error
+        )
+    )
+)
+
+;caudal
+(define (intercalate ls1 ls2)
+    (letrec
+        (
+            (intercalate-rec
+                (lambda (l1 l2 lo)
+                    (if (and (null? l1) (null? l2))
+                        lo
+                        (if (null? l1)
+                            (intercalate-rec `() (cdr l2) (cons (car l2) lo))
+                            (if (null? l2)
+                                (intercalate-rec (cdr l1) `() (cons (car l1) lo))
+                                (intercalate-rec (cdr l1) (cdr l2)
+                                    (cons (car l2)
+                                        (cons (car l1) lo)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+        (if (and (list? ls1) (list? ls2))
+            (reverse
+                (intercalate-rec ls1 ls2 `())
+            )
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; flatten ;;;;;;;;;;;;;;;
+; (flatten `(1 2 (3 4 (5 6)) 7))
 (define (flatten ls)
     (letrec
         (
-            (flatten-aux
+            (flatten-rec
                 (lambda (l)
                     (if (null? l)
                         `()
@@ -312,8 +563,8 @@
                                 (tail (cdr l))
                             )
                             (if (list? head)
-                                (append (flatten-aux head) (flatten-aux tail))
-                                (cons head (flatten-aux tail))
+                                (append (flatten-rec head) (flatten-rec tail))
+                                (cons head (flatten-rec tail))
                             )
                         )
                     )
@@ -321,83 +572,165 @@
             )
         )
         (if (list? ls)
-            (flatten-aux ls)
+            (flatten-rec ls)
             `type-error
         )
     )
 )
 
-;;; reduce
-(define (my-reduce ls initial function)
+;caudal
+(define (flatten ls)
     (letrec
         (
-            (reduce-aux
-                (lambda (l ini func)
+            (flatten-rec
+                (lambda (l lo)
                     (if (null? l)
-                        ini
-                        (func (car l) (reduce-aux (cdr l) ini func))
+                        lo
+                        (let
+                            (
+                                (head (car l))
+                                (tail (cdr l))
+                            )
+                            (if (list? head)
+                                (flatten-rec tail (flatten-rec head lo))
+                                (flatten-rec tail (cons (car l) lo))
+                            )
+                        )
                     )
                 )
             )
         )
         (if (list? ls)
-            (reduce-aux ls initial function)
+            (reverse (flatten-rec ls `()))
             `type-error
         )
     )
 )
 
-; caudal
-(define (my-reduce ls initial function)
+;non caudal with snoc
+(define (flatten ls)
     (letrec
         (
-            (reduce-aux
-                (lambda (l ini func)
+            (flatten-rec
+                (lambda (l lo)
                     (if (null? l)
-                        ini
-                        (reduce-aux (cdr l) (func ini (car l)) func)
+                        lo
+                        (if (list? (car l))
+                            (flatten-rec (cdr l) (flatten-rec (car l) lo))
+                            (flatten-rec (cdr l) (snoc (car l) lo))
+                        )
                     )
                 )
             )
         )
         (if (list? ls)
-            (reduce-aux ls initial function)
+            (flatten-rec ls `())
             `type-error
         )
     )
 )
 
-;;; calcule o tamanho da lista de entrada
-(define (my-length ls)
+;;;;;;;;;;;;;;; map ;;;;;;;;;;;;;;;
+(define (map ls func)
     (letrec
-        ((length-aux
-            (lambda (l)
-                (if (null? l)
-                    0
-                    (+ 1 (length-aux (cdr l)))
+        (
+            (map-rec
+                (lambda (l fun)
+                    (if (null? l)
+                        `()
+                        (cons (fun (car l)) (map-rec (cdr l) fun))
+                    )
                 )
             )
-        ))
-        (if (list? ls)
-            (length-aux ls)
+        )
+        (if (and (list? ls) (procedure? func))
+            (map-rec ls func)
             `type-error
         )
     )
 )
 
-; caudal
-(define (my-length ls)
+;caudal
+(define (map ls func)
     (letrec
-        ((length-aux
-            (lambda (l acc)
-                (if (null? l)
-                    acc
-                    (length-aux (cdr l) (+ acc 1))
+        (
+            (map-rec
+                (lambda (l fun lo)
+                    (if (null? l)
+                        lo
+                        (map-rec (cdr l) fun (cons (fun (car l)) lo))
+                    )
                 )
             )
-        ))
-        (if (list? ls)
-            (length-aux ls 0)
+        )
+        (if (and (list? ls) (procedure? func))
+            (reverse (map-rec ls func `()))
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; filter ;;;;;;;;;;;;;;;
+(define (filter ls func)
+    (letrec
+        (
+            (filter-rec
+                (lambda (l fun)
+                    (if (null? l)
+                        `()
+                        (if (func (car l))
+                            (cons (car l) (filter-rec (cdr l) fun))
+                            (filter-rec (cdr l) fun)
+                        )
+                    )
+                )
+            )
+        )
+        (if (and (list? ls) (procedure? func))
+            (filter-rec ls func)
+            `type-error
+        )
+    )
+)
+
+;caudal
+(define (filter ls func)
+    (letrec
+        (
+            (filter-rec
+                (lambda (l fun lo)
+                    (if (null? l)
+                        lo
+                        (if (func (car l))
+                            (filter-rec (cdr l) fun (cons (car l) lo))
+                            (filter-rec (cdr l) fun lo)
+                        )
+                    )
+                )
+            )
+        )
+        (if (and (list? ls) (procedure? func))
+            (reverse (filter-rec ls func `()))
+            `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; fold ;;;;;;;;;;;;;;;
+(define (fold ls initial func)
+    (letrec
+        (
+            (fold-rec
+                (lambda (l ini fun)
+                    (if (null? l)
+                        ini
+                        (fold-rec (cdr l) (fun ini (car l)) fun)
+                    )
+                )
+            )
+        )
+        (if (and (list? ls) (procedure? func))
+            (fold-rec ls initial func)
             `type-error
         )
     )
