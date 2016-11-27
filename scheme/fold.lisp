@@ -20,14 +20,18 @@
 
 ;;;;;;;;;;;;;;; largest element ;;;;;;;;;;;;;;;
 ; (largest `(1 2 4 20 5 1))
-(define (largest ls)
-    (fold ls 0
-        (lambda (acc x)
-            (if (> x acc)
-                x
-                acc
-            )
+(define maior
+    (lambda (acc x)
+        (if (> x acc)
+            x
+            acc
         )
+    )
+)
+
+(define (largest ls)
+    (fold 
+        maior 0 ls
     )
 )
 
@@ -46,12 +50,8 @@
                         (largest (caddr acc))
                     )
                     (if (> x largest)
-                        (cons (+ curr 1)
-                            (cons curr
-                                (cons x `())
-                            )
-                        )
-                        (cons (+ curr 1) (cdr acc))
+                        (list (+ curr 1) curr x)
+                        (list (+ curr 1) index largest)
                     )
                 )
             )
@@ -64,7 +64,7 @@
 (define (replace ls index value)
     (reverse
         (cadr
-            (fold ls (cons index (cons `() `()))
+            (fold ls (list index `())
                 (lambda (acc x)
                     (let
                         (
@@ -72,18 +72,8 @@
                             (l (cadr acc))
                         )
                         (if (= i 0)
-                            (cons (- i 1)
-                                (cons
-                                    (cons value l)
-                                    `()
-                                )
-                            )
-                            (cons (- i 1)
-                                (cons
-                                    (cons x l)
-                                    `()
-                                )
-                            )
+                            (list (- i 1) (cons value l))
+                            (list (- i 1) (cons x l))
                         )
                     )
                 )

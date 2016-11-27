@@ -316,22 +316,22 @@
     )
 )
 
-;;;;;;;;;;;;;;; cross product ;;;;;;;;;;;;;;;
-(define (cross-product ls1 ls2)
+;;;;;;;;;;;;;;; internal product ;;;;;;;;;;;;;;;
+(define (product ls1 ls2)
     (letrec
         (
-            (cross-product-rec
+            (product-rec
                 (lambda (l1 l2)
                     (if (null? l1)
                         0
-                        (+ (* (car l1) (car l2)) (cross-product-rec (cdr l1) (cdr l2)))
+                        (+ (* (car l1) (car l2)) (product-rec (cdr l1) (cdr l2)))
                     )
                 )
             )
         )
         (if (and (list? ls1) (list? ls2))
             (if (= (length ls1) (length ls2))
-                (cross-product-rec ls1 ls2)
+                (product-rec ls1 ls2)
                 `different-size-error
             )
             `type-error
@@ -631,6 +631,10 @@
 )
 
 ;;;;;;;;;;;;;;; map ;;;;;;;;;;;;;;;
+;(map `(1 2 3 4 5 6)
+;    (lambda (element) (* element element))
+;)
+;`(1 2 3 4 5 6) ==> `(1 4 9 16 25 36)
 (define (map ls func)
     (letrec
         (
@@ -671,6 +675,11 @@
 )
 
 ;;;;;;;;;;;;;;; filter ;;;;;;;;;;;;;;;
+;(filter `(1 2 3 4 5 6)
+;    (lambda (element) (> element 3))
+;)
+;`(1 2 3 4 5 6) ==> `(4 5 6)
+
 (define (filter ls func)
     (letrec
         (
@@ -717,6 +726,11 @@
 )
 
 ;;;;;;;;;;;;;;; fold ;;;;;;;;;;;;;;;
+;(fold `(1 2 3 4 5) 0
+;    (lambda (acc element) (+ acc element))
+;)
+;`(1 2 3 4 5) ==> 15
+
 (define (fold ls initial func)
     (letrec
         (
@@ -732,6 +746,62 @@
         (if (and (list? ls) (procedure? func))
             (fold-rec ls initial func)
             `type-error
+        )
+    )
+)
+
+;;;;;;;;;;;;;;; encode ;;;;;;;;;;;;;;;
+;(a a a a b c c c a) => ((4 a) (1 b) (3 c) (1 a))
+;(encode `(a a a a b c c c a))
+(define (encode ls)
+    (letrec
+        (
+            (encode-rec
+                (lambda (l last count)
+                    (if (null? l)
+                        (list (list count last))
+                        (if (equal? (car l) last)
+                            (encode-rec (cdr l) last (+ 1 count))
+                            (append
+                                (list (list count last))
+                                (encode-rec (cdr l) (car l) 1)
+                            )
+                        )
+                    )
+                )
+            )
+        )
+        (if (list? ls)
+            (if (null? ls)
+                `()
+                (encode-rec (cdr ls) (car ls) 1)
+            )
+            `type-error
+        )
+    )
+)
+
+;fold
+;(encode `(a a a a b c c c a))
+(define (encode ls)
+    (if (null? ls)
+        `()
+        (reverse
+            (fold (cdr ls) (list (list (car ls) 1))
+                (lambda (acc element)
+                    (let*
+                        (
+                            (current (car acc))
+                            (last (car current))
+                            (count (cadr current))
+                        )
+                        (if (equal? last element)
+                            (cons (list (+ 1 count) last) (cdr acc))
+                            (cons (list 1 element) acc)
+                        )
+                    )
+                )
+            )
         )
     )
 )
