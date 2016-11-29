@@ -99,7 +99,7 @@ sister_of(mary, X).
 sister_of(X, Y) :- female(X),
                    parents(X, F, M),
                    parents(Y, F, M),
-                   X is not Y.          %% acho que é assim
+                   dif(X, Y).
 
 %% O Igual é a unificação do prolog onde ele tenta pegar duas estruturas e fazer elas serem iguais (Pattern Matching?)
 sister_of(mary, john) = sister_of(mary, Y).
