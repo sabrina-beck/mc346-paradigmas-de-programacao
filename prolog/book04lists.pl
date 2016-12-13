@@ -96,17 +96,19 @@ flatten2(L, F) :- flaux(L, F1, []),
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% [a, a, a, a, b, c, c, c, d, e, e, e]
 %% [[4, a], [1, b], [3, c], [1, d], [3, e]]
-rlaux([], F, Acc, Previous, Counter) :- C = [Previous | [Counter]],
-                                        Acc2 = [C | Acc],
-                                        reverse(Acc2, F).
-rlaux([Head | Tail], F, Acc, Previous, Counter) :- Head == Previous,
-                                                   Counter2 is Counter + 1,
-                                                   rlaux(Tail, F, Acc, Head, Counter2).
-rlaux([Head | Tail], F, Acc, Previous, Counter) :- Head \= Previous,
-                                                   C = [Previous | [Counter]],
-                                                   Acc2 = [C | Acc],
-                                                   Counter2 is 1,
-                                                   rlaux(Tail, F, Acc2, Head, Counter2).
+
+rlaux([], R, Acc, Previous, Counter) :- ResultElement = [Counter | [Previous]],
+                                        Acc2 = [ResultElement | Acc],
+                                        reverse(Acc2, R).
+rlaux([Head | Tail], R, Acc, Previous, Counter) :- Previous == Head,
+                                                   C1 is Counter + 1,
+                                                   rlaux(Tail, R, Acc, Head, C1), !.
+rlaux([Head | Tail], R, Acc, Previous, Counter) :- Previous \= Head,
+                                                   ResultElement = [Counter | [Previous]],
+                                                   Acc2 = [ResultElement | Acc],
+                                                   C1 is 1,
+                                                   rlaux(Tail, R, Acc2, Head, C1).
+
 run_length([], []).
-run_length([Head|Tail], F) :- Counter is 1,
-                              rlaux(Tail, F, [], Head, Counter).
+run_length([Head | Tail], R) :- Counter is 1,
+                                rlaux(Tail, R, [], Head, Counter).
