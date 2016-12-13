@@ -65,4 +65,48 @@ member1(E, [_ | Tail]) :- member(E, Tail).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% split(List, Pivot, Left, Right).      %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% split([a,a,a,a,p,c,c,c,c,c], p, [a,a,a,a], [c,c,c,c,c]).
 split(List, Pivot, Left, Right) :- append(Left, [Pivot | Right], List).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% flatten(List, Flattened).             %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+flatten([], []).
+flatten([Head | Tail], [Head | F1]) :- atomic(Head),
+                                       flatten(Tail, F1), !.
+flatten([Head | Tail], F) :- flatten(Head, F1),
+                             flatten(Tail, F2),
+                             append(F1, F2, F).
+
+%%caudal
+flaux([], Out, Out).
+%%flaux([[] | Tail], F, Out) :-x flaux(Tail, F, Out).
+flaux([Head | Tail], F, Out) :- \+is_list(Head),
+                                Out1 = [Head | Out],
+                                flaux(Tail, F, Out1).
+flaux([Head | Tail], F, Out) :- is_list(Head),
+                                flaux(Head, F1, Out),
+                                flaux(Tail, F, F1).
+
+flatten2(L, F) :- flaux(L, F1, []),
+                  reverse(F1, F).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% run_length(List, Result).             %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% [a, a, a, a, b, c, c, c, d, e, e, e]
+%% [[4, a], [1, b], [3, c], [1, d], [3, e]]
+rlaux([], F, Acc, Previous, Counter) :- C = [Previous | [Counter]],
+                                        Acc2 = [C | Acc],
+                                        reverse(Acc2, F).
+rlaux([Head | Tail], F, Acc, Previous, Counter) :- Head == Previous,
+                                                   Counter2 is Counter + 1,
+                                                   rlaux(Tail, F, Acc, Head, Counter2).
+rlaux([Head | Tail], F, Acc, Previous, Counter) :- Head \= Previous,
+                                                   C = [Previous | [Counter]],
+                                                   Acc2 = [C | Acc],
+                                                   Counter2 is 1,
+                                                   rlaux(Tail, F, Acc2, Head, Counter2).
+run_length([], []).
+run_length([Head|Tail], F) :- Counter is 1,
+                              rlaux(Tail, F, [], Head, Counter).
